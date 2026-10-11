@@ -166,7 +166,7 @@ export function currentFormat(codec: Codec, f: Pick<Field, 'value' | 'fmt'>): st
   if (f.fmt === CUSTOM) return CUSTOM;
   const canon = codec.parse(f.value);
   if (f.value.trim() && !canon) return CUSTOM;
-  if (f.fmt && Object.hasOwn(codec.formats, f.fmt)) return f.fmt;
+  if (f.fmt && Object.prototype.hasOwnProperty.call(codec.formats, f.fmt)) return f.fmt;
   const ids = Object.keys(codec.formats);
   return (canon && ids.find((id) => codec.formats[id](canon) === f.value.trim())) || ids[0];
 }

@@ -1,7 +1,8 @@
 // Self-check for field parsing/formatting and for cleaning untrusted data. Run: npm run check
 import { CODECS, CUSTOM, currentFormat, kindOf } from '../src/fieldTypes.ts';
 import { LIMITS, clean, imageSrc, looksLikeBiodata, normalize } from '../src/normalize.ts';
-import { DEFAULT_ADJUST, PRESETS, cssFilter } from '../src/photoFilters.ts';
+import { DEFAULT_ADJUST, PRESETS } from '../src/photoFilters.ts';
+import { adjustColours, applyLook, blur } from '../src/lib/retouch.ts';
 
 const eq = (a: unknown, b: unknown, what: string) => {
   if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${what}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`);
@@ -80,9 +81,26 @@ for (const id of [...Object.keys(date.formats), ...Object.keys(time.formats), ..
 eq(normalize({ sections: [] }).photo.adjust, DEFAULT_ADJUST, 'old saves get default adjustments');
 eq(normalize({ sections: [], photo: { adjust: { brightness: 999, contrast: 'x', saturate: -5, warmth: 12.6, smooth: 500, sharpen: -1 } } }).photo.adjust,
   { brightness: 150, contrast: 100, saturate: 0, warmth: 13, smooth: 100, sharpen: 0 }, 'adjustments clamped and rounded');
-eq(cssFilter({ ...DEFAULT_ADJUST, smooth: 50, sharpen: 50 }), 'none', 'smooth/sharpen are not part of the colour filter');
-eq(cssFilter(DEFAULT_ADJUST), 'none', 'untouched photo -> no filter');
-eq(cssFilter(PRESETS.find((p) => p.name === 'B & W')!.adjust), 'brightness(105%) contrast(115%) saturate(0%) sepia(0%)', 'B&W filter');
+const px = (...rgb: number[]) => Uint8ClampedArray.from(rgb.flatMap((v, i) => (i % 3 === 2 ? [v, 255] : [v])));
+const look = (rgb: number[], a: Partial<typeof DEFAULT_ADJUST>) => { const p = px(...rgb); adjustColours(p, { ...DEFAULT_ADJUST, ...a }); return [...p].filter((_, i) => i % 4 !== 3); };
+eq(look([12, 130, 250], {}), [12, 130, 250], 'default adjust leaves pixels alone');
+eq(look([100, 100, 100], { brightness: 150 }), [150, 150, 150], 'brightness 150%');
+eq(look([200, 50, 128], { contrast: 150 }), [236, 11, 128], 'contrast 150% around mid-grey');
+const bw = look([200, 60, 30], { saturate: 0 });
+eq(bw[0] === bw[1] && bw[1] === bw[2], true, 'saturate 0 -> grey');
+eq(look([255, 255, 255], { warmth: 100 }), [255, 255, 239], 'full sepia on white (spec matrix)');
+const dot = new Uint8ClampedArray(9 * 9 * 4); dot[(4 * 9 + 4) * 4] = 255;
+const spread = blur(dot, 9, 9, 1);
+eq(spread[(4 * 9 + 4) * 4] < 255 && spread[(4 * 9 + 3) * 4] > 0, true, 'blur spreads a bright dot');
+const flat = new Uint8ClampedArray(20 * 20 * 4).fill(90);
+eq(blur(flat, 20, 20, 3).every((v, i) => i % 4 === 3 || v === 90), true, 'blur keeps a flat image flat (edges repeat)');
+// skin smoothing lowers grain on skin-tone noise
+const W = 60, H = 60, skin = new Uint8ClampedArray(W * H * 4);
+let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5) * 36;
+for (let i = 0; i < skin.length; i += 4) { const n = rnd(); skin[i] = 205 + n; skin[i + 1] = 150 + n; skin[i + 2] = 125 + n; skin[i + 3] = 255; }
+const sd = (p: Uint8ClampedArray) => { const v = [...p].filter((_, i) => i % 4 === 0); const m = v.reduce((a, b) => a + b) / v.length; return Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); };
+const before = sd(skin); applyLook(skin, W, H, { ...DEFAULT_ADJUST, smooth: 100 });
+eq(sd(skin) < before * 0.6, true, `smooth skin cuts grain (${before.toFixed(1)} -> ${sd(skin).toFixed(1)})`);
 for (const p of PRESETS) eq(normalize({ sections: [], photo: { adjust: p.adjust } }).photo.adjust, p.adjust, `preset ${p.name} within ranges`);
 
 console.log('checks ok');

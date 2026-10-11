@@ -28,9 +28,3 @@ export const sameAdjust = (a: PhotoAdjust, b: PhotoAdjust) => KEYS.every((k) => 
 
 /** Stable string of all adjustments, for effect dependencies. */
 export const adjustKey = (a: PhotoAdjust) => KEYS.map((k) => a[k]).join(',');
-
-/** The colour adjustments as a CSS / canvas filter string ('none' when untouched). Smooth/sharpen are pixel work, see retouch.ts. */
-export const cssFilter = (a: PhotoAdjust) =>
-  a.brightness === 100 && a.contrast === 100 && a.saturate === 100 && a.warmth === 0
-    ? 'none'
-    : `brightness(${a.brightness}%) contrast(${a.contrast}%) saturate(${a.saturate}%) sepia(${a.warmth}%)`;

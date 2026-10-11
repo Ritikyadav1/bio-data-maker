@@ -65,9 +65,7 @@ export async function cropToDataUrl(
   y: number,
   outW: number,
   outH: number,
-  /** canvas filter, e.g. 'brightness(110%) saturate(0%)' */
-  filter = 'none',
-  /** optional pixel post-processing on the cropped result (sharpen, smoothing ...) */
+  /** optional pixel post-processing on the cropped result (colour adjustments, smoothing, sharpening) */
   post?: (c: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => void,
 ): Promise<string> {
   const img = await loadImage(src);
@@ -82,9 +80,7 @@ export async function cropToDataUrl(
   const { c, ctx } = canvas2d(Math.round(outW), Math.round(outH), post ? { willReadFrequently: true } : undefined);
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, c.width, c.height);
-  ctx.filter = filter; // after the white fill, so only the photo is adjusted
   ctx.drawImage(img, dx, dy, dw, dh);
-  ctx.filter = 'none';
   post?.(c, ctx);
   return c.toDataURL('image/jpeg', 0.92);
 }

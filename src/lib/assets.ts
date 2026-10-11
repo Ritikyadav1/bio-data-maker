@@ -1,7 +1,7 @@
 import type { BioData } from '../types';
 import { cropToDataUrl, tintLogo } from './image';
-import { cssFilter } from '../photoFilters';
-import { retouch } from './retouch';
+import { DEFAULT_ADJUST, sameAdjust } from '../photoFilters';
+import { applyLook } from './retouch';
 
 export const DEFAULT_LOGO = `${import.meta.env.BASE_URL}assets/ganesh-logo.png`;
 
@@ -16,7 +16,12 @@ export async function resolveLogo(data: BioData, color?: string): Promise<string
 export async function resolvePhoto(data: BioData, w: number, h: number, density = 3): Promise<string | undefined> {
   if (!data.photo.src) return undefined;
   const { zoom, x, y, src, adjust } = data.photo;
-  const { smooth, sharpen } = adjust;
-  const post = smooth || sharpen ? (c: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => retouch(c, ctx, smooth, sharpen) : undefined;
-  return cropToDataUrl(src, zoom, x, y, w * density, h * density, cssFilter(adjust), post);
+  const post = sameAdjust(adjust, DEFAULT_ADJUST)
+    ? undefined
+    : (c: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
+        const image = ctx.getImageData(0, 0, c.width, c.height);
+        applyLook(image.data, c.width, c.height, adjust);
+        ctx.putImageData(image, 0, 0);
+      };
+  return cropToDataUrl(src, zoom, x, y, w * density, h * density, post);
 }

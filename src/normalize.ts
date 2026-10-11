@@ -18,7 +18,10 @@ export const LIMITS = {
  * C0 controls except tab/newline/CR, DEL, U+FFFE/FFFF and unpaired surrogate halves.
  */
 export const clean = (s: string) =>
-  s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F￾￿]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
+  s
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\uFFFE\uFFFF]/g, '')
+    // keep valid surrogate pairs (emoji), drop lone halves; no regex lookbehind (Safari < 16.4 can't parse it)
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g, (m) => (m.length === 2 ? m : ''));
 
 const str = (v: unknown, max: number, fallback = '') =>
   typeof v === 'string' ? clean(v).slice(0, max) : typeof v === 'number' && Number.isFinite(v) ? String(v) : fallback;
