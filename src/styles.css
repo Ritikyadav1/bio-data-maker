@@ -21,7 +21,7 @@ body {
 #root { height: 100%; }
 button, input, textarea, select { font: inherit; color: inherit; }
 
-.app { display: flex; flex-direction: column; height: 100%; }
+.app { display: flex; flex-direction: column; height: 100%; height: 100dvh; } /* dvh: excludes phone browser bars */
 
 /* ---------- top bar ---------- */
 .topbar {
@@ -106,7 +106,7 @@ input:focus, select:focus { outline: 2px solid #d9b79f; border-color: transparen
 .photo-thumb img { width: 100%; height: 100%; display: block; }
 
 /* ---------- templates picker ---------- */
-.templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; }
+.templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .tpl { border: 2px solid var(--line); background: #fff; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .tpl:hover { border-color: #d9b79f; }
 .tpl.active { border-color: var(--accent); background: var(--accent-soft); }
@@ -137,7 +137,7 @@ input:focus, select:focus { outline: 2px solid #d9b79f; border-color: transparen
 
 /* ---------- small screens ---------- */
 @media (max-width: 900px) {
-  .main { grid-template-columns: 1fr; }
+  .main { grid-template-columns: minmax(0, 1fr); } /* minmax: let the column shrink below its content's min width */
   .mobile-switch { display: flex; background: #fff; border-bottom: 1px solid var(--line); }
   .mobile-switch button { flex: 1; padding: 10px; border: 0; background: none; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; }
   .mobile-switch button.on { color: var(--accent); border-bottom-color: var(--accent); }
@@ -146,9 +146,33 @@ input:focus, select:focus { outline: 2px solid #d9b79f; border-color: transparen
   .hide-sm { display: none; }
   .topbar { padding: 8px 10px; }
   .brand { font-size: 15px; }
-  .btn { padding: 8px 10px; }
-  .field { grid-template-columns: 1fr 1fr; }
-  .field .icon-row { grid-column: 1 / -1; justify-content: flex-end; }
+  .btn { padding: 9px 12px; }
+  .actions { gap: 6px; flex-wrap: nowrap; }
+
+  /* field: name + move/delete buttons on top, value full width below */
+  .field { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'label icons' 'value value'; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+  .field > .label-input { grid-area: label; }
+  .field > .icon-row { grid-area: icons; }
+  .field > :nth-child(2) { grid-area: value; }
+
+  /* finger-sized targets */
+  .icon { width: 36px; height: 36px; font-size: 15px; }
+  .link { padding: 8px 0; }
+  .chip { padding: 7px 12px; font-size: 13px; }
+  .check { padding: 4px 0; }
+  .check input { width: 18px; height: 18px; }
+
+  /* 16px stops iPhone Safari from zooming the page when a box is tapped */
+  input, select, textarea, .value-input.fmt { font-size: 16px; }
+  .value-input.fmt { padding: 7px 8px; }
+
+  .templates { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .tpl { padding: 8px; }
+  .panel-body { padding: 12px 10px 24px; }
+}
+
+@media (max-width: 420px) {
+  .brand-name { display: none; }
 }
 
 /* ---------- print: only the page, full size ---------- */

@@ -2,7 +2,8 @@ import type { BioData } from '../types';
 import { layouts } from '../templates';
 import { LayoutPage, PAGE_H, PAGE_W } from '../templates/LayoutPage';
 
-const THUMB = 0.2;
+/** Thumbnail scale; small enough that two fit side by side on a 360px-wide phone. */
+const THUMB = 0.17;
 
 export function TemplatesPanel({ data, onPick }: { data: BioData; onPick: (id: string) => void }) {
   return (

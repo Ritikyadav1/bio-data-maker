@@ -49,17 +49,17 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <span className="om">ॐ</span> Biodata Maker
+          <span className="om">ॐ</span> <span className="brand-name">Biodata Maker</span>
         </div>
         <div className="actions">
           <button className="btn primary" disabled={!!busy} onClick={() => run('PDF', () => exportPdf(`${baseName()}.pdf`))}>
-            {busy === 'PDF' ? 'Making PDF…' : 'Download PDF'}
+            {busy === 'PDF' ? 'Making…' : <><span className="hide-sm">Download </span>PDF</>}
           </button>
           <button className="btn" disabled={!!busy} onClick={() => run('Word file', () => exportDocx(layout, data, `${baseName()}.docx`))}>
-            {busy === 'Word file' ? 'Making Word…' : 'Download Word'}
+            {busy === 'Word file' ? 'Making…' : <><span className="hide-sm">Download </span>Word</>}
           </button>
-          <button className="btn secondary hide-sm" disabled={!!busy} onClick={() => run('image', () => exportPng(`${baseName()}.png`))}>
-            Image
+          <button className="btn secondary" disabled={!!busy} onClick={() => run('image', () => exportPng(`${baseName()}.png`))}>
+            {busy === 'image' ? 'Making…' : 'Image'}
           </button>
           <button className="btn secondary hide-sm" onClick={() => window.print()} title="Opens the print dialog; choose 'Save as PDF' for a vector PDF">
             Print

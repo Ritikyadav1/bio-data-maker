@@ -163,5 +163,6 @@ export function downloadBlob(blob: Blob, filename: string) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  // generous delay: mobile Safari may still be handing the file to its download / share sheet
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
